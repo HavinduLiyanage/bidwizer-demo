@@ -10,6 +10,7 @@ import { UserMenu } from './user-menu'
 const nav = [
   { label: 'Features', href: '/features' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Talent Marketplace', href: '/talent-marketplace' },
   { label: 'Resources', href: '/resources' },
   { label: 'Support', href: '/support', hasDropdown: true }
 ]
