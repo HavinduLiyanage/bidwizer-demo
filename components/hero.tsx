@@ -15,8 +15,10 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          Tender Revolution<br className="hidden md:block" />
-          Powered by Intelligent<br className="hidden md:block" />
+          Tender Revolution{" "}
+          <br className="hidden md:block" />
+          Powered by Intelligent{" "}
+          <br className="hidden md:block" />
           Technology
         </motion.h1>
 
