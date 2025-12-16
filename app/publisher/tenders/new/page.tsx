@@ -16,7 +16,8 @@ import {
   Key, 
   Plus,
   Clock,
-  Image as ImageIcon
+  Image as ImageIcon,
+  AlertTriangle
 } from "lucide-react";
 import { motion } from "framer-motion";
 import SiteHeader from "@/components/site-header";
@@ -90,23 +91,39 @@ export default function CreateTenderPage() {
       <SiteHeader variant="page" />
       
       <main className="flex-1 bg-[#F9FAFB] min-h-screen">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Publish New Tender
-            </h1>
-            <p className="text-gray-600">
-              Create and publish a new tender for qualified bidders to respond to.
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          <div className="md:hidden rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-center shadow-sm">
+            <AlertTriangle className="mx-auto mb-3 h-10 w-10 text-amber-500" />
+            <h2 className="text-xl font-semibold text-gray-900">Desktop required</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Publishing new tenders is only supported on desktop devices. Please switch to a larger screen to continue.
             </p>
-          </motion.div>
+            <Button
+              variant="outline"
+              className="mt-5 w-full justify-center"
+              onClick={() => router.push("/publisher/dashboard")}
+            >
+              Return to dashboard
+            </Button>
+          </div>
 
-          <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-8">
+          <div className="hidden md:block">
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mb-8"
+            >
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Publish New Tender
+              </h1>
+              <p className="text-gray-600">
+                Create and publish a new tender for qualified bidders to respond to.
+              </p>
+            </motion.div>
+
+            <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-8">
             {/* Tender Information */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -569,10 +586,10 @@ export default function CreateTenderPage() {
             </motion.div>
           </form>
         </div>
-      </main>
+      </div>
+    </main>
 
       <SiteFooter />
     </>
   );
 }
-

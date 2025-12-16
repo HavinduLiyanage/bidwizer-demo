@@ -22,9 +22,9 @@ export default function PaymentFailedPage() {
           <Link href="/pricing">
             <Button className="w-full">Try Again</Button>
           </Link>
-          <Link href="/dashboard">
+          <Link href="/tenders">
             <Button variant="outline" className="w-full">
-              Back to Dashboard
+              Browse Tenders
             </Button>
           </Link>
         </div>
@@ -36,4 +36,3 @@ export default function PaymentFailedPage() {
     </div>
   );
 }
-

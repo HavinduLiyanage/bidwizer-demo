@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Building2, User, Mail, Lock, ArrowRight, CheckCircle } from "lucide-react";
+import { Building2, User, Mail, Lock, ArrowRight, CheckCircle, Building, Briefcase } from "lucide-react";
 import { motion } from "framer-motion";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
@@ -20,6 +20,7 @@ export default function PublisherRegistrationPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    publisherType: "government",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,7 +28,11 @@ export default function PublisherRegistrationPage() {
     e.preventDefault();
     setIsSubmitting(true);
     await new Promise((r) => setTimeout(r, 1000));
-    router.push("/login?registered=true");
+    if (formData.publisherType === "private") {
+      router.push("/publisher/plan-selection");
+    } else {
+      router.push("/publisher/verification");
+    }
   };
 
   const benefits = [
@@ -95,6 +100,40 @@ export default function PublisherRegistrationPage() {
                             className="pl-11 h-12 text-[15px]"
                             required
                           />
+                        </div>
+                      </div>
+
+                      {/* Publisher Type */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">
+                          Organization Type <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {[
+                            { key: "government", label: "Government", icon: Building },
+                            { key: "private", label: "Private", icon: Briefcase }
+                          ].map((option) => (
+                            <button
+                              key={option.key}
+                              type="button"
+                              onClick={() => setFormData({ ...formData, publisherType: option.key })}
+                              className={`flex items-center gap-3 border rounded-xl px-4 py-3 text-left transition ${
+                                formData.publisherType === option.key
+                                  ? "border-primary bg-primary/5 text-primary"
+                                  : "border-gray-200 text-gray-600 hover:border-gray-300"
+                              }`}
+                            >
+                              <option.icon className="h-5 w-5" />
+                              <div>
+                                <p className="font-semibold">{option.label}</p>
+                                <p className="text-xs text-gray-500">
+                                  {option.key === "government"
+                                    ? "Ministries, departments, public agencies"
+                                    : "Private companies and institutions"}
+                                </p>
+                              </div>
+                            </button>
+                          ))}
                         </div>
                       </div>
 

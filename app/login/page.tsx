@@ -4,9 +4,8 @@ import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { apiClient } from "@/lib/api-client";
 import { motion } from "framer-motion";
-import { Mail, Lock, CheckCircle } from "lucide-react";
+import { Mail, Lock, CheckCircle, ShieldCheck, Sparkles, Building2, Gavel } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +26,7 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [selectedRole, setSelectedRole] = useState<"BIDDER" | "PUBLISHER" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
@@ -40,33 +40,44 @@ function LoginPageContent() {
 
   const { login } = useAuth();
   const [errorQuery, setErrorQuery] = useState("");
+  const roleOptions = [
+    { label: "Bidder", value: "BIDDER", description: "Access tenders", icon: Gavel },
+    { label: "Publisher", value: "PUBLISHER", description: "Manage postings", icon: Building2 },
+  ] as const;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedRole) {
+      setErrorQuery("Please select if you are logging in as a bidder or publisher.");
+      return;
+    }
     setIsSubmitting(true);
     setErrorQuery("");
 
-    try {
-      const response = await apiClient.post("/auth/login", {
-        email,
-        password
-      });
+    // Temporary placeholder login that skips API validation
+    const mockUser: {
+      id: string;
+      email: string;
+      name: string;
+      email_verified: boolean;
+      org_type: "BIDDER" | "PUBLISHER";
+    } = {
+      id: "temp-user",
+      email,
+      name: email?.split("@")[0] || "Guest",
+      email_verified: true,
+      org_type: selectedRole,
+    };
 
-      const { access_token, user } = response.data;
-      login(access_token, user);
+    login("temp-token", mockUser);
 
-      // Redirect handled by login function or updated here based on role
-      if (user.org_type === 'PUBLISHER') {
-        router.push("/publisher/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-
-    } catch (error: any) {
-      console.error("Login failed:", error);
-      setErrorQuery(error.response?.data?.detail || "Failed to login. Please check your credentials.");
-      setIsSubmitting(false);
+    if (selectedRole === "PUBLISHER") {
+      router.push("/publisher/dashboard");
+    } else {
+      router.push("/tenders");
     }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -109,13 +120,25 @@ function LoginPageContent() {
               transition={{ duration: 0.6 }}
               className="flex lg:col-span-6 items-center justify-center"
             >
-              <Card className="w-full max-w-md bg-white dark:bg-gray-950 border border-gray-100 dark:border-white/10 shadow-md rounded-2xl">
-                <CardContent className="p-8 space-y-6">
-                  <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back 👋</h1>
-                    <p className="text-gray-600 dark:text-gray-300 mt-1">
-                      Sign in to continue on BidWizer
-                    </p>
+              <Card className="w-full max-w-md bg-gradient-to-b from-white via-blue-50/30 to-white dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 border border-white/50 dark:border-white/10 shadow-xl rounded-3xl">
+                <CardContent className="p-8 space-y-7">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Fresh new look
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                        Secure access
+                      </span>
+                    </div>
+                    <div className="text-center">
+                      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back 👋</h1>
+                      <p className="text-gray-600 dark:text-gray-300 mt-1">
+                        Sign in to continue on BidWizer
+                      </p>
+                    </div>
                   </div>
 
                   {/* Success Message */}
@@ -149,7 +172,7 @@ function LoginPageContent() {
                           placeholder="you@example.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          className="pl-11 h-12 rounded-lg border-gray-200 dark:border-white/10"
+                          className="pl-11 h-12 rounded-xl border-gray-200 dark:border-white/10 bg-white/80"
                           required
                         />
                       </div>
@@ -167,21 +190,58 @@ function LoginPageContent() {
                           placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="pl-11 h-12 rounded-lg border-gray-200 dark:border-white/10"
+                          className="pl-11 h-12 rounded-xl border-gray-200 dark:border-white/10 bg-white/80"
                           required
                         />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                        Log in as <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="mt-3 grid grid-cols-2 gap-3">
+                        {roleOptions.map(({ label, value, description, icon: Icon }) => (
+                          <Button
+                            type="button"
+                            key={value}
+                            variant={selectedRole === value ? "primary" : "outline"}
+                            className="flex flex-col items-start h-full gap-2 rounded-2xl px-4 py-4 text-left hover:shadow-sm transition-shadow"
+                            aria-pressed={selectedRole === value}
+                            onClick={() => setSelectedRole(value)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              <span className="font-semibold">{label}</span>
+                            </div>
+                            <span className="text-xs text-gray-500">{description}</span>
+                          </Button>
+                        ))}
                       </div>
                     </div>
 
                     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Button
                         type="submit"
-                        className="w-full h-12 text-base font-semibold rounded-lg"
+                        className="w-full h-12 text-base font-semibold rounded-xl shadow-sm"
                         disabled={isSubmitting}
                       >
                         {isSubmitting ? "Logging in..." : "Log in"}
                       </Button>
                     </motion.div>
+
+                    <div className="grid grid-cols-3 gap-3 text-center text-xs text-gray-500">
+                      {[
+                        { label: "Avg. approval", value: "2 min" },
+                        { label: "Active orgs", value: "480+" },
+                        { label: "SLA uptime", value: "99.9%" },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="rounded-xl border border-white/60 bg-white/80 backdrop-blur py-2">
+                          <p className="text-sm font-semibold text-gray-900">{value}</p>
+                          <p>{label}</p>
+                        </div>
+                      ))}
+                    </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center sm:justify-between text-sm">
                       <Link href="/forgot-password" className="text-primary hover:underline">

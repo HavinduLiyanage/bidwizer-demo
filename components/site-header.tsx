@@ -23,13 +23,13 @@ export default function SiteHeader({ variant = 'homepage' }: SiteHeaderProps) {
 
   if (variant === 'page') {
     return (
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white">
-        <div className="container flex h-16 items-center justify-between">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="container flex h-16 items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-xl font-bold text-navy-900">Logo</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
             {nav.map(item => (
               <div key={item.label} className="relative group">
                 <Link
@@ -59,7 +59,7 @@ export default function SiteHeader({ variant = 'homepage' }: SiteHeaderProps) {
         </div>
 
         {open && (
-          <div className="md:hidden border-t border-slate-200 bg-white">
+          <div className="md:hidden border-t border-slate-200 bg-white/95 backdrop-blur">
             <div className="container py-3 space-y-3">
               {nav.map(item => (
                 <Link
@@ -94,19 +94,19 @@ export default function SiteHeader({ variant = 'homepage' }: SiteHeaderProps) {
         {/* Oval navbar */}
         <div className="container pt-4">
           <motion.header
-            className="relative mx-auto max-w-4xl rounded-full bg-white/90 px-6 py-3 shadow-lg backdrop-blur-sm"
+            className="relative mx-auto w-full max-w-4xl rounded-2xl bg-white/90 px-4 py-3 shadow-lg backdrop-blur-sm sm:rounded-full sm:px-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-2">
                 <span className="text-xl font-bold text-navy-900">Logo</span>
               </Link>
 
               {/* Desktop Navigation */}
-              <nav className="hidden md:flex items-center gap-8">
+              <nav className="hidden md:flex items-center gap-6 lg:gap-8">
                 {nav.map(item => (
                   <div key={item.label} className="relative group">
                     <Link

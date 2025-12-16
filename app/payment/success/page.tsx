@@ -19,13 +19,8 @@ export default function PaymentSuccessPage() {
         </p>
 
         <div className="space-y-3">
-          <Link href="/dashboard">
-            <Button className="w-full">Go to Dashboard</Button>
-          </Link>
           <Link href="/tenders">
-            <Button variant="outline" className="w-full">
-              Browse Tenders
-            </Button>
+            <Button className="w-full">Browse Tenders</Button>
           </Link>
         </div>
 
@@ -36,4 +31,3 @@ export default function PaymentSuccessPage() {
     </div>
   );
 }
-

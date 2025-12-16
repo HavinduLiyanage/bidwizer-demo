@@ -13,7 +13,7 @@ import {
   Calendar,
   DollarSign,
   Users,
-  FilePenLine,
+  AlertTriangle,
 } from "lucide-react";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
@@ -21,7 +21,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { mockTenders } from "@/lib/mock-data";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
+import { mockTenders, type Tender } from "@/lib/mock-data";
 
 const getPseudoRandomNumber = (seed: string, min: number, max: number) => {
   let hash = 0;
@@ -37,10 +40,7 @@ const getPseudoRandomNumber = (seed: string, min: number, max: number) => {
 export default function PublisherDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  // In real app, filter tenders by current publisher
-  // For demo, we'll add some draft tenders to show the functionality
-  const publisherTenders = [
+  const [tenders, setTenders] = useState(() => [
     ...mockTenders,
     {
       id: "TND-2024-006",
@@ -55,6 +55,7 @@ export default function PublisherDashboardPage() {
       budget: "$500,000 - $750,000",
       type: "Public" as const,
       location: "Matara, Sri Lanka",
+      sector: "Government" as const,
     },
     {
       id: "TND-2024-007",
@@ -69,11 +70,27 @@ export default function PublisherDashboardPage() {
       budget: "$1,200,000",
       type: "Public" as const,
       location: "Colombo, Sri Lanka",
+      sector: "Government" as const,
     },
-  ];
+  ]);
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingTender, setEditingTender] = useState<Tender | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    category: "",
+    deadline: "",
+    status: "Draft",
+    budget: "",
+    location: "",
+    type: "Public",
+    description: "",
+  });
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [tenderToDelete, setTenderToDelete] = useState<Tender | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
 
   // Filter tenders based on search and status
-  const filteredTenders = publisherTenders.filter((tender) => {
+  const filteredTenders = tenders.filter((tender) => {
     const matchesSearch =
       tender.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tender.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -84,13 +101,69 @@ export default function PublisherDashboardPage() {
 
   // Calculate stats
   const stats = {
-    total: publisherTenders.length,
-    active: publisherTenders.filter((t) => t.status === "Active").length,
-    draft: publisherTenders.filter((t) => t.status === "Draft").length,
-    totalViews: publisherTenders.reduce(
+    total: tenders.length,
+    active: tenders.filter((t) => t.status === "Active").length,
+    draft: tenders.filter((t) => t.status === "Draft").length,
+    totalViews: tenders.reduce(
       (sum, t) => sum + getPseudoRandomNumber(t.id + "views", 100, 1100),
       0
     ),
+  };
+
+  const handleEditTender = (tender: Tender) => {
+    setEditingTender(tender);
+    setEditForm({
+      title: tender.title,
+      category: tender.category,
+      deadline: tender.deadline,
+      status: tender.status,
+      budget: tender.budget ?? "",
+      location: tender.location ?? "",
+      type: tender.type,
+      description: tender.description,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingTender) {
+      return;
+    }
+    setTenders((prev) =>
+      prev.map((tender) =>
+        tender.id === editingTender.id
+          ? {
+              ...tender,
+              title: editForm.title,
+              category: editForm.category,
+              deadline: editForm.deadline,
+              status: editForm.status as Tender["status"],
+              budget: editForm.budget.trim() ? editForm.budget : undefined,
+              location: editForm.location.trim() ? editForm.location : undefined,
+              type: editForm.type as Tender["type"],
+              description: editForm.description,
+            }
+          : tender
+      )
+    );
+    setEditDialogOpen(false);
+    setEditingTender(null);
+  };
+
+  const handleRequestDelete = (tender: Tender) => {
+    setTenderToDelete(tender);
+    setDeleteConfirmation("");
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!tenderToDelete || deleteConfirmation !== "apply delete for this tender") {
+      return;
+    }
+    setTenders((prev) => prev.filter((tender) => tender.id !== tenderToDelete.id));
+    setDeleteDialogOpen(false);
+    setTenderToDelete(null);
+    setDeleteConfirmation("");
   };
 
   const statCards = [
@@ -107,13 +180,6 @@ export default function PublisherDashboardPage() {
       icon: TrendingUp,
       bg: "bg-emerald-50",
       iconColor: "text-emerald-600",
-    },
-    {
-      label: "Draft Tenders",
-      value: stats.draft,
-      icon: FilePenLine,
-      bg: "bg-amber-50",
-      iconColor: "text-amber-600",
     },
     {
       label: "Total Views",
@@ -152,7 +218,7 @@ export default function PublisherDashboardPage() {
 
           {/* Stats Cards */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
@@ -203,23 +269,27 @@ export default function PublisherDashboardPage() {
                 />
               </div>
             </div>
-            <div className="flex gap-3">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 h-12 rounded-full border border-slate-200 text-sm text-slate-700 bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="closed">Closed</option>
-              </select>
-              <Link href="/publisher/tenders/new">
-                <Button className="h-12 rounded-full px-5 shadow-md">
+          <div className="flex gap-3 flex-wrap justify-end md:justify-start">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 h-12 rounded-full border border-slate-200 text-sm text-slate-700 bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none min-w-[150px] w-full md:w-auto"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="draft">Draft</option>
+              <option value="closed">Closed</option>
+            </select>
+              <Link href="/publisher/tenders/new" className="hidden md:block">
+                <Button className="h-12 rounded-full px-5 shadow-md w-full justify-center">
                   <Plus className="h-4 w-4 mr-2" />
                   New Tender
                 </Button>
               </Link>
+              <div className="flex w-full items-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 md:hidden">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <span>Publish new tenders from a desktop device.</span>
+              </div>
             </div>
           </motion.div>
 
@@ -260,7 +330,7 @@ export default function PublisherDashboardPage() {
                         {filteredTenders.map((tender, index) => (
                           <motion.tr
                             key={tender.id}
-                            className="hover:bg-slate-50 transition-colors"
+                  className="hover:bg-slate-50 transition-colors"
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.03, duration: 0.3 }}
@@ -337,47 +407,29 @@ export default function PublisherDashboardPage() {
                                 </div>
                               )}
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                {tender.status !== "Draft" && (
-                                  <Link href={`/tenders/${tender.id}`}>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 hover:bg-slate-100"
-                                      aria-label="View tender"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  </Link>
-                                )}
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex flex-wrap items-center gap-2 justify-end xl:justify-start">
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
-                                  className="h-8 w-8 p-0 hover:bg-slate-100"
+                                  className="h-9 px-4 rounded-full border-slate-200 text-slate-700 hover:bg-slate-100 w-full sm:w-auto justify-center"
                                   aria-label="Edit tender"
+                                  type="button"
+                                  onClick={() => handleEditTender(tender)}
                                 >
-                                  <Edit className="h-4 w-4" />
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
                                 </Button>
-                                {tender.status !== "Draft" && (
-                                  <Link href={`/publisher/tenders/${tender.id}/analytics`}>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 hover:bg-slate-100"
-                                      aria-label="View analytics"
-                                    >
-                                      <TrendingUp className="h-4 w-4" />
-                                    </Button>
-                                  </Link>
-                                )}
                                 <Button
-                                  variant="ghost"
+                                  variant="destructive"
                                   size="sm"
-                                  className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                                  className="h-9 px-4 rounded-full bg-red-50 text-red-600 hover:bg-red-100 w-full sm:w-auto justify-center"
                                   aria-label="Delete tender"
+                                  type="button"
+                                  onClick={() => handleRequestDelete(tender)}
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
                                 </Button>
                               </div>
                             </td>
@@ -414,6 +466,192 @@ export default function PublisherDashboardPage() {
           </motion.div>
         </div>
       </main>
+
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setEditingTender(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-xl font-semibold text-slate-900">Edit tender</h3>
+              <p className="text-sm text-slate-500 mt-1">
+                Update the tender details and save your changes.
+              </p>
+            </div>
+            <DialogClose asChild>
+              <button
+                className="text-slate-400 hover:text-slate-600 transition"
+                aria-label="Close edit dialog"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </DialogClose>
+          </div>
+
+          {editingTender && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-title">Title</Label>
+                  <Input
+                    id="edit-title"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, title: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Input
+                    id="edit-category"
+                    value={editForm.category}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, category: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-deadline">Deadline</Label>
+                  <Input
+                    id="edit-deadline"
+                    type="date"
+                    value={editForm.deadline}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, deadline: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-status">Status</Label>
+                  <select
+                    id="edit-status"
+                    value={editForm.status}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, status: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Draft">Draft</option>
+                    <option value="Active">Active</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="edit-budget">Budget</Label>
+                  <Input
+                    id="edit-budget"
+                    value={editForm.budget}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, budget: e.target.value }))}
+                    className="mt-1"
+                    placeholder="$1,000,000"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-location">Location</Label>
+                  <Input
+                    id="edit-location"
+                    value={editForm.location}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, location: e.target.value }))}
+                    className="mt-1"
+                    placeholder="City, Country"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-type">Tender Type</Label>
+                  <select
+                    id="edit-type"
+                    value={editForm.type}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, type: e.target.value }))}
+                    className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Public">Public</option>
+                    <option value="Private">Private</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea
+                  id="edit-description"
+                  rows={4}
+                  value={editForm.description}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <DialogClose asChild>
+              <Button variant="outline" type="button">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="button" onClick={handleSaveEdit}>
+              Save changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) {
+            setTenderToDelete(null);
+            setDeleteConfirmation("");
+          }
+        }}
+      >
+        <DialogContent>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-semibold text-slate-900">Delete tender</h3>
+              <p className="text-sm text-slate-500 mt-1">
+                This action cannot be undone. Please type{" "}
+                <span className="font-semibold text-slate-700">
+                  &quot;apply delete for this tender&quot;
+                </span>{" "}
+                to confirm deleting{" "}
+                <span className="font-semibold">
+                  {tenderToDelete ? tenderToDelete.title : "this tender"}
+                </span>
+                .
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="delete-confirmation">Confirmation text</Label>
+              <Input
+                id="delete-confirmation"
+                value={deleteConfirmation}
+                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                className="mt-1"
+                placeholder="apply delete for this tender"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <DialogClose asChild>
+                <Button variant="outline" type="button">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button
+                variant="destructive"
+                type="button"
+                disabled={deleteConfirmation !== "apply delete for this tender"}
+                onClick={handleConfirmDelete}
+              >
+                Delete tender
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <SiteFooter />
     </>

@@ -4,7 +4,7 @@ import { Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
 export function Footer() {
   return (
     <footer className="bg-slate-50 border-t">
-      <div className="container mx-auto px-4 md:px-6 py-12">
+      <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Product */}
           <div>
@@ -88,7 +88,7 @@ export function Footer() {
             <p className="text-gray-600 text-sm mb-4">
               Subscribe to our newsletter for the latest updates.
             </p>
-            <div className="flex space-x-4">
+            <div className="flex flex-wrap gap-4">
               <a
                 href="https://facebook.com"
                 target="_blank"
@@ -145,4 +145,3 @@ export function Footer() {
     </footer>
   );
 }
-

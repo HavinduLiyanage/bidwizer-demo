@@ -58,13 +58,13 @@ export default function SiteFooter() {
             
             <div className="mt-6">
               <p className="text-sm font-semibold text-navy-900">Stay up to date</p>
-              <div className="mt-2 flex gap-2">
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
                 <input
                   type="email"
                   placeholder="Enter your email"
-                  className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full"
                 />
-                <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600">
+                <button className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-600 sm:w-auto">
                   Subscribe
                 </button>
               </div>
@@ -95,7 +95,7 @@ export default function SiteFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-200 pt-8 md:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-slate-200 pt-8 text-center md:flex-row md:text-left">
           <p className="text-sm text-slate-600">
             © 2025 BidWizer. All rights reserved.
           </p>
@@ -118,16 +118,16 @@ export default function SiteFooter() {
         </div>
 
         {/* Terms & Privacy */}
-        <div className="mt-4 text-center">
-          <Link href="/privacy" className="text-xs text-slate-500 hover:text-navy-900">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500">
+          <Link href="/privacy" className="hover:text-navy-900">
             Privacy Policy
           </Link>
-          <span className="mx-2 text-slate-300">•</span>
-          <Link href="/terms" className="text-xs text-slate-500 hover:text-navy-900">
+          <span className="text-slate-300">|</span>
+          <Link href="/terms" className="hover:text-navy-900">
             Terms of Service
           </Link>
-          <span className="mx-2 text-slate-300">•</span>
-          <Link href="/cookies" className="text-xs text-slate-500 hover:text-navy-900">
+          <span className="text-slate-300">|</span>
+          <Link href="/cookies" className="hover:text-navy-900">
             Cookie Policy
           </Link>
         </div>
@@ -135,4 +135,3 @@ export default function SiteFooter() {
     </footer>
   )
 }
-

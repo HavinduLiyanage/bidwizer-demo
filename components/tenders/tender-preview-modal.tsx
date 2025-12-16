@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { X, Building2, MapPin, Calendar, DollarSign, Clock, Phone, Mail, Folder, FileText, ChevronRight, ChevronDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
+import { X, Building2, MapPin, Calendar, DollarSign, Phone, Mail, Folder, FileText, ChevronRight, ChevronDown, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -319,14 +320,18 @@ export function TenderPreviewModal({ tender, isOpen, onClose }: TenderPreviewMod
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4">
-                <Button className="flex-1">
+              <Button
+                asChild
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-primary/90 text-base font-semibold flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition hover:-translate-y-0.5"
+              >
+                <Link
+                  href={`/tenders/${encodeURIComponent(tender.id)}`}
+                  onClick={onClose}
+                >
                   View Full Details
-                </Button>
-                <Button variant="outline" className="flex-1">
-                  Save for Later
-                </Button>
-              </div>
+                  <ExternalLink className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </motion.div>
         </>
@@ -334,5 +339,3 @@ export function TenderPreviewModal({ tender, isOpen, onClose }: TenderPreviewMod
     </AnimatePresence>
   );
 }
-
-

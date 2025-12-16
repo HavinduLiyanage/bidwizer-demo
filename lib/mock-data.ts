@@ -20,6 +20,7 @@ export interface Tender {
   budget?: string;
   type: "Public" | "Private";
   location?: string;
+  sector: "Government" | "Private" | "International";
 }
 
 export const mockPublishers: Publisher[] = [
@@ -63,7 +64,8 @@ export const mockTenders: Tender[] = [
     publishedDate: "2024-09-15",
     budget: "$5,000,000 - $8,000,000",
     type: "Public",
-    location: "Colombo, Sri Lanka"
+    location: "Colombo, Sri Lanka",
+    sector: "Government"
   },
   {
     id: "TND-2024-002",
@@ -77,7 +79,8 @@ export const mockTenders: Tender[] = [
     publishedDate: "2024-09-10",
     budget: "$2,500,000",
     type: "Public",
-    location: "Kandy, Sri Lanka"
+    location: "Kandy, Sri Lanka",
+    sector: "Government"
   },
   {
     id: "TND-2024-003",
@@ -91,7 +94,8 @@ export const mockTenders: Tender[] = [
     publishedDate: "2024-09-20",
     budget: "$10,000,000 - $15,000,000",
     type: "Public",
-    location: "Galle, Sri Lanka"
+    location: "Galle, Sri Lanka",
+    sector: "International"
   },
   {
     id: "TND-2024-004",
@@ -105,7 +109,8 @@ export const mockTenders: Tender[] = [
     publishedDate: "2024-09-18",
     budget: "$3,200,000",
     type: "Public",
-    location: "Kurunegala, Sri Lanka"
+    location: "Kurunegala, Sri Lanka",
+    sector: "Government"
   },
   {
     id: "TND-2024-005",
@@ -119,7 +124,8 @@ export const mockTenders: Tender[] = [
     publishedDate: "2024-09-22",
     budget: "$1,800,000",
     type: "Public",
-    location: "Jaffna, Sri Lanka"
+    location: "Jaffna, Sri Lanka",
+    sector: "Private"
   },
 ];
 

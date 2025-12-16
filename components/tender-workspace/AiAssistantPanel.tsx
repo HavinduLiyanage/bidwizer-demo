@@ -6,6 +6,7 @@ import { BriefTab } from "./tabs/BriefTab";
 import { CoverLetterTab } from "./tabs/CoverLetterTab";
 import { ChatTab } from "./tabs/ChatTab";
 import { getAiUsage } from "@/lib/mocks/ai";
+import { cn } from "@/lib/utils";
 
 interface AiAssistantPanelProps {
   tenderId: string;
@@ -23,8 +24,8 @@ export function AiAssistantPanel({
   const usage = getAiUsage();
 
   return (
-    <div className={className}>
-      <Tabs defaultValue="chat" className="flex flex-col h-full">
+    <div className={cn("flex flex-col", className)}>
+      <Tabs defaultValue="chat" className="flex flex-col flex-1">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50/50">
           <h3 className="text-sm font-semibold text-gray-900">AI Assistant</h3>
@@ -75,4 +76,3 @@ export function AiAssistantPanel({
     </div>
   );
 }
-

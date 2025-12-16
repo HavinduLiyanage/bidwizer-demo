@@ -28,13 +28,8 @@ export default function BidderRegistrationReady() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                <Link href="/dashboard" className="flex-1">
-                  <Button className="w-full">Go to Dashboard</Button>
-                </Link>
                 <Link href="/tenders" className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    Explore Tenders
-                  </Button>
+                  <Button className="w-full">Explore Tenders</Button>
                 </Link>
               </div>
             </div>
@@ -46,4 +41,3 @@ export default function BidderRegistrationReady() {
     </div>
   );
 }
-

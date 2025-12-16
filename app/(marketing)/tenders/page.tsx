@@ -22,6 +22,7 @@ export default function TendersPage() {
   const [sortBy, setSortBy] = useState("deadline");
   const [showClosed, setShowClosed] = useState(false);
   const [previewTender, setPreviewTender] = useState<Tender | null>(null);
+  const [selectedSector, setSelectedSector] = useState<Tender["sector"] | null>(null);
   
   // Simulate loading
   useEffect(() => {
@@ -36,8 +37,9 @@ export default function TendersPage() {
       (tender.description && tender.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesStatus = showClosed ? true : tender.status === "Active";
+    const matchesSector = selectedSector ? tender.sector === selectedSector : true;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesSector;
   });
 
   const resultsCount = filteredTenders.length;
@@ -174,30 +176,9 @@ export default function TendersPage() {
             <div className="lg:col-span-8">
               {/* Analytics Chips */}
               <AnalyticsChips
-                newThisWeek={newThisWeek}
-                topCategory={topCategory}
-                totalActive={activeTenders.length}
+                selectedSector={selectedSector}
+                onSelect={(sector) => setSelectedSector(sector)}
               />
-
-              {/* Optional AI Banner */}
-              <motion.div 
-                className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl flex items-center gap-3 hover:shadow-md transition-shadow"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-              >
-                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    AI-powered insights coming soon
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    Get instant tender summaries and personalized recommendations
-                  </p>
-                </div>
-              </motion.div>
 
               {/* Tenders Grid */}
               <AnimatePresence mode="wait">
