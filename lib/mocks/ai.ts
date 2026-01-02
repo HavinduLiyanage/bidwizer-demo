@@ -33,6 +33,8 @@ export type AskParams = {
   scope: "file" | "folder" | "entire";
   fileId?: string;
   folderPath?: string;
+  context?: "tender" | "uploads" | "both";
+  uploadedFileNames?: string[];
   question: string;
 };
 
@@ -122,9 +124,8 @@ export async function generateCoverLetter(
 ${strengths || "Our key strengths include experienced project management teams, state-of-the-art construction equipment, and a commitment to safety and environmental sustainability."}
 
 We understand the critical importance of this project to the government and the community. Our approach combines innovative construction methodologies with strict adherence to specifications, ensuring timely delivery without compromising quality. We maintain ISO 9001:2015 certification and have consistently achieved client satisfaction ratings above 95%.`
-      : `${company} has successfully delivered numerous government projects with budgets exceeding $5M. ${
-          strengths || "Our experienced team and modern equipment position us perfectly for this project."
-        }
+      : `${company} has successfully delivered numerous government projects with budgets exceeding $5M. ${strengths || "Our experienced team and modern equipment position us perfectly for this project."
+      }
 
 We are committed to delivering exceptional quality while maintaining the highest safety standards.`;
 
@@ -151,25 +152,46 @@ ${company}`;
 export async function* askQuestion(params: AskParams): AsyncGenerator<string> {
   await new Promise((r) => setTimeout(r, 300));
 
-  const { question, scope, fileId } = params;
+  const { question, scope, fileId, context = "tender", uploadedFileNames = [] } = params;
 
   let answer = "";
 
+  const uploadsMention =
+    uploadedFileNames.length > 0
+      ? `Your uploads (e.g., ${uploadedFileNames.slice(0, 2).join(", ")}${uploadedFileNames.length > 2 ? ", ..." : ""
+      })`
+      : "your uploaded documents";
+
   if (question.toLowerCase().includes("budget") || question.toLowerCase().includes("cost")) {
-    answer = `Based on the tender documents, the estimated budget range for this project is **$5,000,000 to $8,000,000**. The budget breakdown includes:\n\n- Civil and structural works: ~60%\n- MEP systems: ~25%\n- Finishing and landscaping: ~15%\n\nPayment will be made through progress payments tied to milestone completion, as specified in the Financial Terms document (page 12).`;
+    answer = `Based on the ${context === "uploads" ? uploadsMention : "tender documents"
+      }, the estimated budget range for this project is **$5,000,000 to $8,000,000**. The budget breakdown includes:\n\n- Civil and structural works: ~60%\n- MEP systems: ~25%\n- Finishing and landscaping: ~15%\n\nPayment will be made through progress payments tied to milestone completion, as specified in the Financial Terms document (page 12).`;
   } else if (question.toLowerCase().includes("deadline") || question.toLowerCase().includes("when")) {
     answer = `The submission deadline for this tender is **December 30, 2024, 5:00 PM local time**. Late submissions will not be accepted.\n\nKey dates:\n- Pre-bid meeting: November 15, 2024\n- Last date for queries: December 10, 2024\n- Tender opening: December 31, 2024\n- Expected award notification: January 2025`;
   } else if (
     question.toLowerCase().includes("requirement") ||
     question.toLowerCase().includes("qualification")
   ) {
-    answer = `To be eligible for this tender, contractors must meet the following requirements:\n\n**Mandatory Qualifications:**\n1. CIDA Grade C1 or higher certification\n2. Minimum 10 years experience in large-scale government projects\n3. Financial capacity: completed projects worth $5M+ in last 3 years\n4. ISO 9001:2015 certification\n5. Valid tax compliance certificate\n\n**Technical Requirements:**\n- Proof of equipment and machinery ownership or lease agreements\n- Qualified project management team (including registered engineers)\n- Safety certification (OHSAS 18001 or equivalent)`;
+    answer =
+      context === "both"
+        ? `Here’s a quick compliance check:\n\n- **Tender asks for:** CIDA Grade C1+, 10+ years experience, projects $5M+ in last 3 years, ISO 9001:2015, tax compliance.\n- **Your uploads show:** ${uploadedFileNames.length > 0
+          ? `${uploadsMention} list past projects and certifications.`
+          : "Awaiting your uploaded company profile/certifications."
+        }\n\nGap to close: confirm safety certification (OHSAS 18001) and ensure financial statements cover the last 3 years.`
+        : `To be eligible for this tender, contractors must meet the following requirements:\n\n**Mandatory Qualifications:**\n1. CIDA Grade C1 or higher certification\n2. Minimum 10 years experience in large-scale government projects\n3. Financial capacity: completed projects worth $5M+ in last 3 years\n4. ISO 9001:2015 certification\n5. Valid tax compliance certificate\n\n**Technical Requirements:**\n- Proof of equipment and machinery ownership or lease agreements\n- Qualified project management team (including registered engineers)\n- Safety certification (OHSAS 18001 or equivalent)`;
   } else if (question.toLowerCase().includes("timeline") || question.toLowerCase().includes("duration")) {
     answer = `The project timeline is **24 months** from the date of commencement, expected to start in Q1 2025.\n\n**Phased Timeline:**\n- Phase 1 (Months 1-6): Foundation and structural framework\n- Phase 2 (Months 7-16): Building envelope and MEP rough-in\n- Phase 3 (Months 17-22): Interior finishing and systems commissioning\n- Phase 4 (Months 23-24): Final inspections and handover\n\nPenalty clauses apply for delays beyond agreed extension periods.`;
+  } else if (context === "both" || question.toLowerCase().includes("compare")) {
+    answer = `Comparison summary:\n\n- **Scope alignment:** Tender requests full lifecycle delivery; ${fileId ? "your selected document" : uploadsMention
+      } covers core deliverables but may need explicit QA/QC plan references.\n- **Budget:** Tender range is $5M–$8M. Validate that your pricing schedule maps to BOQ sections and highlights value engineering.\n- **Compliance:** Ensure certifications in your uploads are current and match tender requirements (ISO 9001:2015, safety certification).\n\nWant me to draft a variance list or a compliance matrix from your uploads vs the tender?`;
+  } else if (context === "uploads") {
+    answer = `Working only with ${uploadsMention}. I can summarize your documents, spot gaps against common tender patterns, or help draft responses. Ask me to extract key capabilities or cross-check against requirements.`;
   } else {
-    answer = `Based on the ${
-      scope === "file" ? "selected document" : scope === "folder" ? "documents in this folder" : "tender documents"
-    }, I can help you understand:\n\n- **Project scope**: 10-story government administrative complex\n- **Location**: Central Business District\n- **Budget**: $5M - $8M\n- **Timeline**: 24 months\n- **Key requirements**: CIDA C1, 10+ years experience\n\nPlease ask specific questions about budget, requirements, timeline, or technical specifications for more detailed information.`;
+    answer = `Based on the ${scope === "file"
+        ? "selected document"
+        : scope === "folder"
+          ? "documents in this folder"
+          : "tender documents"
+      }, I can help you understand:\n\n- **Project scope**: 10-story government administrative complex\n- **Location**: Central Business District\n- **Budget**: $5M - $8M\n- **Timeline**: 24 months\n- **Key requirements**: CIDA C1, 10+ years experience\n\nPlease ask specific questions about budget, requirements, timeline, or technical specifications for more detailed information.`;
   }
 
   // Stream the response word by word
@@ -180,7 +202,11 @@ export async function* askQuestion(params: AskParams): AsyncGenerator<string> {
   }
 }
 
-export function getMockCitations(question: string): Citation[] {
+export function getMockCitations(
+  question: string,
+  context: "tender" | "uploads" | "both" = "tender",
+  uploadedFileNames: string[] = []
+): Citation[] {
   if (question.toLowerCase().includes("budget") || question.toLowerCase().includes("cost")) {
     return [
       {
@@ -212,6 +238,19 @@ export function getMockCitations(question: string): Citation[] {
       },
     ];
   }
+
+  if (context === "uploads" || context === "both") {
+    const uploadDocName = uploadedFileNames[0] || "Uploaded_Profile.pdf";
+    return [
+      {
+        docId: "upload-1",
+        docName: uploadDocName,
+        page: 1,
+        snippet: "Company profile, past projects, certifications, and equipment inventory.",
+      },
+    ];
+  }
+
   return [];
 }
 
@@ -219,4 +258,3 @@ export function getAiUsage(): { used: number; total: number } {
   // Could persist in localStorage in a real implementation
   return { used: 84, total: 120 };
 }
-

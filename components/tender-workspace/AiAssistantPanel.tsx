@@ -13,6 +13,7 @@ interface AiAssistantPanelProps {
   selectedFileId?: string;
   selectedFolderPath?: string;
   className?: string;
+  onUploadFiles?: (files: FileList | null) => void;
 }
 
 export function AiAssistantPanel({
@@ -20,6 +21,7 @@ export function AiAssistantPanel({
   selectedFileId,
   selectedFolderPath,
   className,
+  onUploadFiles,
 }: AiAssistantPanelProps) {
   const usage = getAiUsage();
 
@@ -44,7 +46,7 @@ export function AiAssistantPanel({
             value="letter"
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-xs"
           >
-            Cover Letter
+            Release to Office Letter
           </TabsTrigger>
           <TabsTrigger
             value="chat"
@@ -69,6 +71,7 @@ export function AiAssistantPanel({
               tenderId={tenderId}
               selectedFileId={selectedFileId}
               selectedFolderPath={selectedFolderPath}
+              onUploadFiles={onUploadFiles}
             />
           </TabsContent>
         </div>

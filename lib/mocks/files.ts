@@ -5,6 +5,8 @@ export type FileNode = {
   ext?: string;
   size?: string;
   path: string;
+  origin?: "tender" | "upload";
+  previewUrl?: string;
   children?: FileNode[];
 };
 
@@ -17,12 +19,14 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
     name: "Tender Documents",
     type: "folder",
     path: "/",
+    origin: "tender",
     children: [
       {
         id: "main",
         name: "Main Documents",
         type: "folder",
         path: "/Main Documents",
+        origin: "tender",
         children: [
           {
             id: "tender-brief",
@@ -31,6 +35,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
             ext: "pdf",
             size: "2.4 MB",
             path: "/Main Documents/Tender_Brief.pdf",
+            origin: "tender",
           },
           {
             id: "technical-req",
@@ -39,6 +44,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
             ext: "pdf",
             size: "1.8 MB",
             path: "/Main Documents/Technical_Requirements.pdf",
+            origin: "tender",
           },
           {
             id: "financial-terms",
@@ -47,6 +53,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
             ext: "pdf",
             size: "945 KB",
             path: "/Main Documents/Financial_Terms.pdf",
+            origin: "tender",
           },
         ],
       },
@@ -55,12 +62,14 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
         name: "Technical Drawings",
         type: "folder",
         path: "/Technical Drawings",
+        origin: "tender",
         children: [
           {
             id: "architectural",
             name: "Architectural",
             type: "folder",
             path: "/Technical Drawings/Architectural",
+            origin: "tender",
             children: [
               {
                 id: "floor-plans",
@@ -69,6 +78,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
                 ext: "pdf",
                 size: "5.2 MB",
                 path: "/Technical Drawings/Architectural/Floor_Plans.pdf",
+                origin: "tender",
               },
               {
                 id: "elevations",
@@ -77,6 +87,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
                 ext: "pdf",
                 size: "3.8 MB",
                 path: "/Technical Drawings/Architectural/Elevations.pdf",
+                origin: "tender",
               },
             ],
           },
@@ -85,6 +96,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
             name: "Structural",
             type: "folder",
             path: "/Technical Drawings/Structural",
+            origin: "tender",
             children: [
               {
                 id: "foundation",
@@ -93,6 +105,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
                 ext: "pdf",
                 size: "2.1 MB",
                 path: "/Technical Drawings/Structural/Foundation_Plans.pdf",
+                origin: "tender",
               },
             ],
           },
@@ -103,6 +116,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
         name: "Specifications",
         type: "folder",
         path: "/Specifications",
+        origin: "tender",
         children: [
           {
             id: "material-specs",
@@ -111,6 +125,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
             ext: "docx",
             size: "456 KB",
             path: "/Specifications/Material_Specifications.docx",
+            origin: "tender",
           },
           {
             id: "quality-standards",
@@ -119,6 +134,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
             ext: "pdf",
             size: "1.2 MB",
             path: "/Specifications/Quality_Standards.pdf",
+            origin: "tender",
           },
         ],
       },
@@ -129,6 +145,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
         ext: "xlsx",
         size: "823 KB",
         path: "/Bill of Quantities.xlsx",
+        origin: "tender",
       },
       {
         id: "addendum",
@@ -137,6 +154,7 @@ export async function getTenderTree(tenderId: string): Promise<FileNode> {
         ext: "pdf",
         size: "234 KB",
         path: "/Addendum_01.pdf",
+        origin: "tender",
       },
     ],
   };
@@ -148,4 +166,3 @@ export async function getFileContent(fileId: string): Promise<string> {
   // Return a mock PDF URL or content
   return `/mock-pdfs/${fileId}.pdf`;
 }
-

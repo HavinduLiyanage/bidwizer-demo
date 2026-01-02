@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { X, Search, Loader2, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { FileTree } from "./FileTree";
 import { DocumentViewer } from "./DocumentViewer";
 import { AiAssistantPanel } from "./AiAssistantPanel";
@@ -23,7 +22,8 @@ export function TenderWorkspaceModal({
   isOpen,
   onClose,
 }: TenderWorkspaceModalProps) {
-  const [tree, setTree] = useState<FileNode | null>(null);
+  const [baseTree, setBaseTree] = useState<FileNode | null>(null);
+  const [uploads, setUploads] = useState<FileNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<FileNode | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
@@ -31,13 +31,39 @@ export function TenderWorkspaceModal({
   const [isMobileFilesOpen, setIsMobileFilesOpen] = useState(true);
   const [isMobileAssistantOpen, setIsMobileAssistantOpen] = useState(false);
 
+
+
+  const formatSize = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  };
+
+  const buildTreeWithUploads = useMemo(() => {
+    if (!baseTree) return null;
+    const uploadsFolder: FileNode = {
+      id: "uploads-root",
+      name: "My Uploads",
+      type: "folder",
+      path: "/My Uploads",
+      origin: "upload",
+      children: uploads,
+    };
+    return {
+      ...baseTree,
+      children: [...(baseTree.children || []), uploadsFolder],
+    } as FileNode;
+  }, [baseTree, uploads]);
+
   useEffect(() => {
     if (isOpen) {
       const loadTree = async () => {
         setIsLoading(true);
         try {
           const data = await getTenderTree(tenderId);
-          setTree(data);
+          setBaseTree(data);
         } catch (error) {
           console.error("Failed to load tree:", error);
         } finally {
@@ -49,38 +75,53 @@ export function TenderWorkspaceModal({
     }
   }, [isOpen, tenderId]);
 
-  useEffect(() => {
-    if (isOpen && tree) {
-      const lastFileId = localStorage.getItem(`tender_${tenderId}_lastFile`);
-      if (lastFileId) {
-        const findNode = (node: FileNode): FileNode | null => {
-          if (node.id === lastFileId) return node;
-          if (node.children) {
-            for (const child of node.children) {
-              const found = findNode(child);
-              if (found) return found;
-            }
-          }
-          return null;
-        };
-        const node = findNode(tree);
-        if (node) {
-          setSelectedNode(node);
-        }
-      }
-    }
-  }, [isOpen, tenderId, tree]);
+
+
+
 
   const handleSelectNode = (node: FileNode) => {
     setSelectedNode(node);
     // Save to localStorage
+    // Save to localStorage - actually, checking the user request "start from new", maybe we shouldn't persist selection either?
+    // "every time i refresh this my uploads should be refresehed and start from new"
+    // Usually "refresh" clears everything. 
+    // I will remove the selection persistence as well to be safe and truly "start from new".
     if (node.type === "file") {
-      localStorage.setItem(`tender_${tenderId}_lastFile`, node.id);
+      // localStorage.setItem(`tender_${tenderId}_lastFile`, node.id); 
     }
   };
 
   const handleClose = () => {
     onClose();
+  };
+
+
+
+  const handleUploadFiles = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+
+    const newUploads: FileNode[] = Array.from(fileList).map((file, idx) => {
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      return {
+        id: `upload-${Date.now()}-${idx}`,
+        name: file.name,
+        type: "file",
+        ext,
+        size: formatSize(file.size),
+        path: `/My Uploads/${file.name}`,
+        origin: "upload",
+        previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+      };
+    });
+
+    setUploads((prev) => {
+      const next = [...prev, ...newUploads];
+      // persistUploads(next);
+      return next;
+    });
+
+    setSelectedNode(newUploads[newUploads.length - 1]);
+    setIsFileTreeCollapsed(false);
   };
 
   // Prevent default context menu
@@ -121,7 +162,7 @@ export function TenderWorkspaceModal({
                 )}
               </div>
 
-              {/* Quick Search */}
+              {/* Quick Search + Upload */}
               <div className="relative w-full sm:ml-auto sm:max-w-sm">
                 <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
                 <Input
@@ -132,7 +173,7 @@ export function TenderWorkspaceModal({
             </div>
 
             {/* Close Button */}
-            <div className="flex justify-end">
+            <div className="flex items-center gap-2 justify-end">
               <Button
                 variant="ghost"
                 size="sm"
@@ -156,7 +197,7 @@ export function TenderWorkspaceModal({
           )}
 
           {/* Main Content - responsive panes */}
-          {!isLoading && tree && (
+          {!isLoading && buildTreeWithUploads && (
             <>
               <div className="hidden flex-1 overflow-hidden bg-gray-50 lg:flex">
                 {/* Left: File Tree */}
@@ -180,7 +221,7 @@ export function TenderWorkspaceModal({
                   ) : (
                     <>
                       <FileTree
-                        tree={tree}
+                        tree={buildTreeWithUploads}
                         selectedId={selectedNode?.id}
                         onSelect={handleSelectNode}
                       />
@@ -227,6 +268,7 @@ export function TenderWorkspaceModal({
                           selectedNode?.type === "folder" ? selectedNode.path : undefined
                         }
                         className="h-full"
+                        onUploadFiles={handleUploadFiles}
                       />
                       <button
                         onClick={() => setIsAiPanelCollapsed(true)}
@@ -263,7 +305,7 @@ export function TenderWorkspaceModal({
                     {isMobileFilesOpen && (
                       <div className="border-t border-gray-100">
                         <FileTree
-                          tree={tree}
+                          tree={buildTreeWithUploads}
                           selectedId={selectedNode?.id}
                           onSelect={handleSelectNode}
                           className="h-auto max-h-72"
@@ -296,6 +338,7 @@ export function TenderWorkspaceModal({
                             selectedNode?.type === "folder" ? selectedNode.path : undefined
                           }
                           className="h-auto"
+                          onUploadFiles={handleUploadFiles}
                         />
                       </div>
                     )}

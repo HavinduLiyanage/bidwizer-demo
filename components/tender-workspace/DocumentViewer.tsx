@@ -75,6 +75,7 @@ export function DocumentViewer({ selectedNode, className }: DocumentViewerProps)
   const isPdf = selectedNode.ext === "pdf";
   const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(selectedNode.ext || "");
   const isPreviewable = isPdf || isImage;
+  const isUpload = selectedNode.origin === "upload";
 
   return (
     <div className={cn("flex flex-col h-full bg-white", className)}>
@@ -89,6 +90,11 @@ export function DocumentViewer({ selectedNode, className }: DocumentViewerProps)
               <Separator orientation="vertical" className="h-4" />
               <span className="text-xs text-muted-foreground">{selectedNode.size}</span>
             </>
+          )}
+          {isUpload && (
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+              My upload
+            </span>
           )}
         </div>
 
@@ -238,7 +244,7 @@ export function DocumentViewer({ selectedNode, className }: DocumentViewerProps)
               ) : (
                 /* Image Preview */
                 <img
-                  src={`/placeholder-document.jpg`}
+                  src={selectedNode.previewUrl || `/placeholder-document.jpg`}
                   alt={selectedNode.name}
                   className="max-w-full h-auto"
                   onContextMenu={(e) => e.preventDefault()}
@@ -253,7 +259,9 @@ export function DocumentViewer({ selectedNode, className }: DocumentViewerProps)
               <FileQuestion className="h-10 w-10 text-gray-400" />
             </div>
             <p className="text-gray-700 font-medium mb-1">{selectedNode.name}</p>
-            <p className="text-sm text-gray-500 mb-4">Preview not available</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Preview not available{isUpload ? " for this upload" : ""}
+            </p>
             <div className="p-4 bg-blue-50 rounded-lg text-center max-w-sm">
               <p className="text-xs text-gray-600">
                 This file type ({selectedNode.ext?.toUpperCase()}) cannot be previewed in the
@@ -266,4 +274,3 @@ export function DocumentViewer({ selectedNode, className }: DocumentViewerProps)
     </div>
   );
 }
-

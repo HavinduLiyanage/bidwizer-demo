@@ -23,7 +23,7 @@ interface FileTreeProps {
 }
 
 export function FileTree({ tree, selectedId, onSelect, className }: FileTreeProps) {
-  const [expanded, setExpanded] = useState<Set<string>>(new Set(["root", "main"]));
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(["root", "main", "uploads-root"]));
 
   const toggleExpand = useCallback((id: string) => {
     setExpanded((prev) => {
@@ -38,6 +38,10 @@ export function FileTree({ tree, selectedId, onSelect, className }: FileTreeProp
   }, []);
 
   const getFileIcon = (node: FileNode) => {
+    if (node.origin === "upload" && node.type === "file") {
+      return <FileText className="h-4 w-4 text-emerald-600" />;
+    }
+
     if (node.type === "folder") {
       return expanded.has(node.id) ? (
         <FolderOpen className="h-4 w-4 text-blue-500" />
@@ -134,4 +138,3 @@ export function FileTree({ tree, selectedId, onSelect, className }: FileTreeProp
     </div>
   );
 }
-

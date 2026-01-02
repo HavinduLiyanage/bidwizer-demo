@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, FileText, Folder, Files } from "lucide-react";
+import { Send, Loader2, FileText, Folder, Files, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { askQuestion, getMockCitations, type ChatMessage } from "@/lib/mocks/ai";
 import { cn } from "@/lib/utils";
@@ -13,13 +12,22 @@ interface ChatTabProps {
   tenderId: string;
   selectedFileId?: string;
   selectedFolderPath?: string;
+  onUploadFiles?: (files: FileList | null) => void;
 }
 
-export function ChatTab({ tenderId, selectedFileId, selectedFolderPath }: ChatTabProps) {
+export function ChatTab({
+  tenderId,
+  selectedFileId,
+  selectedFolderPath,
+  onUploadFiles,
+}: ChatTabProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [scope, setScope] = useState<"file" | "folder" | "entire">("entire");
+  const [contextSource, setContextSource] = useState<"tender" | "uploads" | "both">("tender");
+  const [lastUploadName, setLastUploadName] = useState<string | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +52,13 @@ export function ChatTab({ tenderId, selectedFileId, selectedFolderPath }: ChatTa
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
+    const uploadedFileNames = [
+      ...(lastUploadName ? [lastUploadName] : []),
+      ...messages
+        .filter((m) => m.role === "assistant" && m.citations)
+        .flatMap((m) => m.citations?.map((c) => c.docName) || []),
+    ];
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
@@ -62,6 +77,8 @@ export function ChatTab({ tenderId, selectedFileId, selectedFolderPath }: ChatTa
         scope,
         fileId: selectedFileId,
         folderPath: selectedFolderPath,
+        context: contextSource,
+        uploadedFileNames,
         question: input,
       });
 
@@ -84,7 +101,7 @@ export function ChatTab({ tenderId, selectedFileId, selectedFolderPath }: ChatTa
                 role: "assistant" as const,
                 content: fullResponse,
                 timestamp: new Date(),
-                citations: getMockCitations(input),
+                citations: getMockCitations(input, contextSource, uploadedFileNames),
               },
             ];
           }
@@ -190,6 +207,14 @@ export function ChatTab({ tenderId, selectedFileId, selectedFolderPath }: ChatTa
               >
                 When is the submission deadline?
               </button>
+              <button
+                onClick={() =>
+                  setInput("Compare my uploaded documents against the tender requirements.")
+                }
+                className="block w-full text-left px-3 py-2 text-xs bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Compare my uploads vs tender
+              </button>
             </div>
           </div>
         )}
@@ -246,31 +271,96 @@ export function ChatTab({ tenderId, selectedFileId, selectedFolderPath }: ChatTa
 
       {/* Input */}
       <div className="px-4 py-3 border-t border-gray-200 bg-gray-50/50">
-        <div className="flex gap-2">
-          <Input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask a question about this tender..."
-            disabled={isLoading}
-            className="flex-1 h-9 text-xs"
-          />
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            size="sm"
-            className="h-9 px-3"
-          >
-            {isLoading ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Send className="h-3.5 w-3.5" />
-            )}
-          </Button>
+        <div className="space-y-2">
+          {lastUploadName && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 bg-white text-xs">
+                <span className="font-medium text-gray-800 truncate max-w-[160px]">
+                  {lastUploadName}
+                </span>
+                <button
+                  className="text-gray-500 hover:text-gray-800"
+                  onClick={() => {
+                    setLastUploadName(null);
+                    setContextSource("tender");
+                  }}
+                  aria-label="Remove upload"
+                >
+                  ×
+                </button>
+              </div>
+              <button
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border",
+                  contextSource === "uploads"
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-700 border-gray-200"
+                )}
+                onClick={() => setContextSource("uploads")}
+              >
+                Just uploads
+              </button>
+              <button
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-[11px] font-semibold border",
+                  contextSource === "both"
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-700 border-gray-200"
+                )}
+                onClick={() => setContextSource("both")}
+              >
+                Compare context
+              </button>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+            <input
+              ref={uploadInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                setLastUploadName(e.target.files?.[0]?.name || null);
+                setContextSource(e.target.files?.length ? "uploads" : "tender");
+                onUploadFiles?.(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <Input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask a question, upload, or compare against your docs..."
+              disabled={isLoading}
+              className="flex-1 h-10 text-xs border-0 shadow-none focus-visible:ring-0"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-10 w-10 rounded-full p-0 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              onClick={() => uploadInputRef.current?.click()}
+              aria-label="Upload"
+            >
+              <UploadCloud className="h-5 w-5" />
+            </Button>
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading}
+              size="sm"
+              className="h-10 w-10 rounded-full p-0"
+              aria-label="Send"
+            >
+              {isLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Send className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
